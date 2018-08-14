@@ -3,53 +3,71 @@ import scriptLoader from 'react-async-script-loader'
 import { G_MAPS_KEY } from './data/credentials'
 import * as FoursquareAPI from './utils/FoursquareAPI' 
 import memoize from 'memoize-one'
-import InfoWindow from './InfoWindow'
+import * as CreateInfoContent from './utils/InfoWindow'
 
 class MapContainer extends Component {
 
     state = {
         zoom: 14,
         isMapLoaded: false,
-        venues: [],
+        venues: '',
         map: '',
         infoWindow: '',
-        markers: []
+        markers: '',
+        listItem: ''
     }
 
     componentDidUpdate(prevProps) {
-        console.log('update');
-        
         this.didMapLoaded();
         this.didVenuesUpdate(prevProps);
+        this.didChooseFromList(prevProps);
+    }
+
+    didChooseFromList(prevProps) {
+        if(this.props.listItem !== prevProps.listItem) {
+            this.openInfoWindow(this.props.listItem);
+        }
     }
 
     didMapLoaded() {
         if (this.props.isScriptLoaded && !this.state.isMapLoaded) {
-            let map = new window.google.maps.Map(document.getElementById('map'), {
-                zoom: this.state.zoom,
-                center: this.props.center
-            })
-            this.setState({
-                isMapLoaded: true,
-                map: map,
-                infoWindow: new window.google.maps.InfoWindow()
-            });
+            this.initMap();
         }
+    }
+
+    initMap() {
+        let map = new window.google.maps.Map(document.getElementById('map'), {
+            zoom: this.state.zoom,
+            center: this.props.center
+        })
+        window.google.maps.InfoWindow.prototype.opened = false;
+        this.setState({
+            isMapLoaded: true,
+            map: map,
+            infoWindow: new window.google.maps.InfoWindow()
+        });
     }
 
     didVenuesUpdate(prevProps) {
         if(JSON.stringify(this.props.venues) !== JSON.stringify(prevProps.venues)){
             if(this.state.isMapLoaded) {
-                let markersArr = [];
-                let venuesMap = new Map();
+                this.cleanMarkers();
+                let markersMap = new Map(),
+                    venuesMap = new Map();
                 this.props.venues.forEach(venue => {
-                    markersArr.push([venue.id,this.createMarker(venue)])
+                    markersMap.set(venue.id, this.createMarker(venue))
                     venuesMap.set(venue.id, venue)})
                 this.setState({
-                    markers: new Map(markersArr),
-                    venues: venuesMap
+                    venues: venuesMap,
+                    markers: markersMap
                 })
             }
+        }
+    }
+
+    cleanMarkers(){
+        if(this.state.markers instanceof Map) {
+            this.state.markers.forEach(marker => marker.setMap(null))
         }
     }
 
@@ -75,24 +93,44 @@ class MapContainer extends Component {
 
     // Add try ...catch around the markers.get()
     openInfoWindow(id, venue) {
-        console.log(id);
-        console.log(this.state.venues);
-        console.log(this.state.infoWindow);
-        this.state.markers.get(id).setAnimation(window.google.maps.Animation.BOUNCE)
-        if( this.state.infoWindow !== '') {
+        console.log('click');
+        
+        if(this.state.infoWindow.opened === true) {
+            console.log('opened');
             
-        } else {
-            console.log('bounce');
+            this.state.infoWindow.close();
+            FoursquareAPI.fetchDetails(id).then(data => CreateInfoContent.content(data))
+                .then(content => { 
+                    console.log(content);
+                    
+                    this.state.infoWindow.setContent(content);
+                    this.state.infoWindow.open(this.state.map, this.state.markers.get(id), content);
+                })
+        } else if(this.state.infoWindow.opened === false){
+            console.log('closed');
             
-            <InfoWindow venue={this.state.venues}/>
-            this.state.markers.get(id).setAnimation(window.google.maps.Animation.BOUNCE);
+            FoursquareAPI.fetchDetails(id).then(data => 
+                CreateInfoContent.content(data))
+                .then(content => {
+                    console.log(content);
+                    
+                    this.state.infoWindow.setContent(content);
+                    this.state.infoWindow.open(this.state.map, this.state.markers.get(id), content);
+                    console.log(this.state.infoWindow);
+                    
+                }).then(() => this.state.infoWindow.opened = true)
         }
+    }
+
+    createInfoWindow(id) {
+        FoursquareAPI.fetchDetails(id).then(data => CreateInfoContent(data))
+            .then(content => {
+                this.state.infoWindow({content: content})
+                this.state.infoWindow.open();
+            })
     }
     
     render () {
-        
-        console.log(this.state.venues);
-        
         return (
             <div id="map"></div>
         )
