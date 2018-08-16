@@ -2,8 +2,13 @@ import React, { Component } from 'react';
 import MapContainer from './MapContainer'
 import SearchBar from './SearchBar'
 import List from './List'
+import ErrorModal from './ErrorModal'
 import * as FoursquareAPI from './utils/FoursquareAPI'
 import './App.css';
+
+const errorModalContent = {
+  content: ''
+}
 
 class App extends Component {
   state = {
@@ -13,21 +18,25 @@ class App extends Component {
     center: {
       lat: 42.696430,
       lng: 23.321032
-    }
+    },
+    error: false,
+    openErrorModal: false
   }
 
   componentDidMount() {
-    if(!this.state.venues.length){
-      this.loadVenues();
-    }
+    this.loadVenues();
   }
 
-  componentDidUpdate(prevProps,prevState) {
-    if(prevState.query !== this.state.query) {
+  componentDidUpdate(prevProps, prevState) {
+    this.didQueryUpdate(prevState);
+  }
+
+  didQueryUpdate = (prevState) => {
+    if (prevState.query !== this.state.query) {
       this.requestVenues();
     }
   }
-  
+
   loadVenues() {
     if (!this.state.venues.length) {
       this.requestVenues()
@@ -36,43 +45,74 @@ class App extends Component {
 
   requestVenues() {
     FoursquareAPI.fetchVenues(this.state.center, this.state.query)
-      .then(venues => {this.setState({venues: venues})})
+      .then(venues => {
+        this.setState({
+          venues: venues
+        })
+      })
+      .catch(e => this.errorCaught(e))
   }
 
-  // Venues for the List Component
-  listVenues() {
-    console.log(this.state.venues.map(venue => ({id: venue.id, name: venue.name})))
-    return this.state.venues.map(venue => ({
-      id: venue.id,
-      name: venue.name
-    }))
-  }
-
+  // Update the query state if the user types in the SearchBox
   updateQuery = (query) => {
-    this.setState({query: query})
+    this.setState({
+      query: query
+    })
   }
 
+  // Get the Venue ID from clicking a specific item from the List
   getVenueID = (venueID) => {
-    this.setState({listItem: venueID})
+    this.setState({
+      listItem: venueID
+    })
   }
 
-  render() {
-    return (
-      <div className="App">
-        <SearchBar
-          updateQuery={this.updateQuery}
-        />
-        <List
-          venues={this.state.venues}
-          getVenueID={this.getVenueID}
-        />
-        <MapContainer 
-          venues={this.state.venues}
-          center={this.state.center}
-          listItem={this.state.listItem}/>
-      </div>
-    );
+  /* 
+   Pass the function to the child Components and store the error
+   in global variable @errorModal. After the state updates modal is 
+   shown with information provided by the API.
+  */
+  errorCaught = (e) => {
+    errorModalContent.content = e;
+    if (!this.state.error && !this.state.openErrorModal) {
+      this.setState({
+        error: true,
+        openErrorModal: true
+      })
+    }
   }
-}
 
-export default App
+  // Close the modal by clicking the close symbol
+  closeErrorModal = () => {
+    this.setState({
+      error: false,
+      openErrorModal: false
+    })
+  }
+
+    render() {
+      return (
+        <div className="App">
+          {(this.state.error && this.state.openErrorModal)  && (
+            <ErrorModal
+            message={errorModalContent.content}
+            closeModal={this.closeErrorModal}/>
+            )}
+          <SearchBar
+            updateQuery={this.updateQuery}
+          />
+          <List
+            venues={this.state.venues}
+            getVenueID={this.getVenueID}
+          />
+          <MapContainer 
+            venues={this.state.venues}
+            center={this.state.center}
+            errorCaught={this.errorCaught}
+            listItem={this.state.listItem}/>
+        </div>
+      );
+    }
+  }
+
+  export default App
