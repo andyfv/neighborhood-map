@@ -12,14 +12,20 @@ class SearchBar extends Component {
         this.handleQueryChange(input.value);
     }
 
-    render () {
+    render() {
         return (
             <div className="search-bar">
                 <svg id="search-icon" />
                 <div className="search-input-wrapper">
-                    <input className="search-input" type="text" 
+                    <input 
+                        className="search-input" 
+                        type="text" 
+                        aria-label="search field"
                         onChange={(e) => this.handleQueryChange(e.target.value)}/>
-                    <button id="delete-button" onClick={this.clearInput}></button>
+                    <button 
+                    id="delete-button"
+                    aria-label="clear search field" 
+                    onClick={this.clearInput}></button>
                 </div>
             </div>
         )
