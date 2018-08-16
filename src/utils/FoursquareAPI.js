@@ -1,4 +1,7 @@
-import { CLIENT_ID, CLIENT_SECRET } from '../data/credentials'
+import {
+    CLIENT_ID,
+    CLIENT_SECRET
+} from '../data/credentials'
 
 // Foursqare API Parameters
 const API = 'https://api.foursquare.com/v2/venues/';
@@ -8,11 +11,11 @@ const VERSION = 20180708;
 const CATEGORIES = {
     'Food': '4d4b7105d754a06374d81259',
 }
- 
+
 // Return only the ID's from @CATEGORIES and asign them to @CATEGORY_ARR
 const CATEGORY_ARR = Object.keys(CATEGORIES).map((category) => CATEGORIES[category]);
 
-// Fetch venues based on @center parameter and the predefined Foursquare API paramaters
+// Fetch venues based on @center and @query parameters and the predefined Foursquare API paramaters
 export const fetchVenues = (center, query) => {
     let url = `${API}search?
                 ll=${center.lat},${center.lng}&
@@ -24,11 +27,11 @@ export const fetchVenues = (center, query) => {
                 query=${query}&
                 limit=${LIMIT}`;
 
-    
+
     return fetch(formatURL(url))
         .then(response => {
-            if(!response.ok) {
-                throw response
+            if (!response.ok) {
+                throw Error('Unable to fetch Venues')
             } else {
                 return response.json()
             }
@@ -45,10 +48,11 @@ export const fetchDetails = (venueID) => {
                 client_secret=${CLIENT_SECRET}&
                 v=${VERSION}`;
 
+
     return fetch(formatURL(url))
         .then(response => {
-            if(!response.ok) {
-                throw response
+            if (!response.ok) {
+                throw Error('Unable to fetch Venue Details')
             } else {
                 return response.json()
             }
@@ -57,6 +61,6 @@ export const fetchDetails = (venueID) => {
 }
 
 // Correctly format the URL by removing white spaces, indentation, etc.
-function formatURL (URL) {
+function formatURL(URL) {
     return URL.replace(/\s+/g, '');
 }
