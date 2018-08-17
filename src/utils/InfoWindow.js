@@ -1,5 +1,4 @@
 export const content = (venue) => {
-    console.log(venue);
 
     const unsafeOptions = {
         name: venue.name,
