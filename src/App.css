@@ -288,15 +288,15 @@
 
 #modal-message-box {
   background-color: #F2F2F2;
-  margin: 10px 5px 0 5px;
-  padding: 10px;
+  margin: 5px 5px 0 5px;
+  padding: 5px;
   flex-grow: 1;
-  height: 30px;
   border-radius: 6px;
   -webkit-border-radius: 6px;
   -moz-border-radius: 6px;
   -ms-border-radius: 6px;
   -o-border-radius: 6px;
+  overflow: auto;
 }
 
 #error-message {
