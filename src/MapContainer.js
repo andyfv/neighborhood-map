@@ -17,14 +17,27 @@ class MapContainer extends Component {
     }
 
     componentDidUpdate(prevProps) {
-        this.didMapLoaded();
+        this.didMapLoad();
         this.didVenuesUpdate(prevProps);
         this.didChooseFromList(prevProps);
     }
 
-    didMapLoaded() {
+    didMapLoad() {
         if (this.props.isScriptLoaded && !this.state.isMapLoaded) {
             this.initMap();
+        }
+    }
+
+    componentDidMount() {
+        this.handleGMapsAuthError();
+    }
+
+    // If there is auth error prompt the user with error message
+    handleGMapsAuthError () {
+        window.gm_authFailure = () => {
+            this.props.errorCaught(
+                new Error(`Google Maps didn't load correctly. 
+                Authentication Error: Check console for technical details`))
         }
     }
 
