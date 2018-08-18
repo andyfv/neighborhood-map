@@ -21,6 +21,12 @@ The **Neighborhood** project is Map app written in React.You can search differen
 
 4) Start the application:
 
+* The service worker is only enabled in the production environment,so if you want to use it build the project first. For more information check [Making a Progressive Web App](https://goo.gl/KwvDNy)
+
+        npm run build
+
+* Otherwise just start the server
+
         npm start
 
 5) This will open new browser window/tab. If it doesn't navigate to
